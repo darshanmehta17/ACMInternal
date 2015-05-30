@@ -3,8 +3,9 @@
     <color name="colorTransparentBlack">#463c3c3c</color>
 
     <color name="colorPrimary">#3F51B5</color>
-    <color name="colorPrimaryDark">#324191</color>
+    <color name="colorPrimaryDark">#303F9F</color>
     <color name="colorAccent">#FF4081</color>
+    <color name="colorAccentLight">#FF80AB</color>
     <color name="colorControlHighlight">#463c3c3c</color>
 
     <color name="text_primary">#D9FFFFFF</color>

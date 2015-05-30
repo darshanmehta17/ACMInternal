@@ -4,6 +4,7 @@ import android.content.SharedPreferences;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -12,16 +13,24 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 
+import com.gc.materialdesign.views.ProgressBarIndeterminate;
 import com.rengwuxian.materialedittext.MaterialEditText;
+
+import de.keyboardsurfer.android.widget.crouton.Crouton;
+import de.keyboardsurfer.android.widget.crouton.Style;
+import studios.slick.acminternal.customviews.MyButton;
+import studios.slick.acminternal.customviews.MyTextView;
 
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
     SharedPreferences sharedPreferences;
-    Button loginButton;
+    Button loginButton, exitButton;
     MaterialEditText etRegno, etPassword;
-    ProgressBar progressBar;
+    ProgressBarIndeterminate progressBar;
     LinearLayout loginLayout;
+    MyTextView loginSupportTextView;
+    Toolbar toolbar;
 
     private boolean hasLoggedIn;
     private String registrationNumber;
@@ -46,11 +55,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private void initialize() {
         loginButton = (Button)findViewById(R.id.loginButton);
         loginButton.setOnClickListener(this);
+        exitButton = (Button)findViewById(R.id.exitButton);
+        exitButton.setOnClickListener(this);
 
         etRegno = (MaterialEditText)findViewById(R.id.etRegNo);
         etPassword = (MaterialEditText)findViewById(R.id.etPassword);
-        progressBar = (ProgressBar)findViewById(R.id.progressBarLogin);
         loginLayout = (LinearLayout)findViewById(R.id.llLoginDetails);
+        progressBar = (ProgressBarIndeterminate)findViewById(R.id.progressBarLogin);
+        loginSupportTextView = (MyTextView) findViewById(R.id.loginSupportText);
+
+        toolbar = (Toolbar) findViewById(R.id.toolbarLogin);
+        toolbar.setContentInsetsAbsolute(0, 0);
+        setSupportActionBar(toolbar);
 
         sharedPreferences = getSharedPreferences(FILENAME, 0);
 
@@ -86,7 +102,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onClick(View v) {
-        validateForm();
+        switch (v.getId()){
+            case R.id.loginButton:
+                validateForm();
+                break;
+            case R.id.exitButton:
+                finish();
+                break;
+        }
     }
 
     /*
@@ -103,16 +126,36 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
+
+    /*
+     * Launches a context sensitive toast (Crouton) on the top of the screen with the error message.
+     */
+    private void launchNoNetworkError() {
+        Crouton.makeText(this, "No Internet Connection", Style.ALERT).show();
+    }
+
     /*
      * Toggles the visibility of the login form
      */
     private void showForm(boolean isVisible){
+        loginButton.setEnabled(isVisible);
+        exitButton.setEnabled(isVisible);
         if(isVisible){
             loginLayout.setVisibility(View.VISIBLE);
             progressBar.setVisibility(View.GONE);
+            loginSupportTextView.setText("Enter Your Credentials");
         }else{
             loginLayout.setVisibility(View.GONE);
             progressBar.setVisibility(View.VISIBLE);
+            loginSupportTextView.setText("Authenticating Info");
         }
     }
+
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        Crouton.cancelAllCroutons();
+    }
+
 }
