@@ -13,16 +13,22 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 
+import com.android.volley.VolleyError;
 import com.gc.materialdesign.views.ProgressBarIndeterminate;
+import com.google.gson.Gson;
 import com.rengwuxian.materialedittext.MaterialEditText;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import de.keyboardsurfer.android.widget.crouton.Crouton;
 import de.keyboardsurfer.android.widget.crouton.Style;
 import studios.slick.acminternal.customviews.MyButton;
 import studios.slick.acminternal.customviews.MyTextView;
+import studios.slick.acminternal.volleyhandler.MyVolley;
 
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+public class MainActivity extends AppCompatActivity implements View.OnClickListener, MyVolley.OnFailureListener, MyVolley.OnSuccessListener {
 
     SharedPreferences sharedPreferences;
     Button loginButton, exitButton;
@@ -43,7 +49,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private static final String SPLOGGEDIN = "hasLoggedIn";
     private static final String SPREGNO = "registrationNumber";
     private static final String SPPWD = "password";
+    private static final String SPNAME = "userName";
     private static final String SPUSERMODE = "userMode";
+    private static final String SPIMGURL = "imageUrl";
+
+    private MyVolley myVolley;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,6 +67,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         loginButton.setOnClickListener(this);
         exitButton = (Button)findViewById(R.id.exitButton);
         exitButton.setOnClickListener(this);
+
+        myVolley = new MyVolley();
+        myVolley.setOnSuccessListener(this);
+        myVolley.setOnFailureListener(this);
 
         etRegno = (MaterialEditText)findViewById(R.id.etRegNo);
         etPassword = (MaterialEditText)findViewById(R.id.etPassword);
@@ -80,9 +94,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private void checkLogin() {
         hasLoggedIn = sharedPreferences.getBoolean(SPLOGGEDIN, false);
         if(hasLoggedIn){
-//            registrationNumber = sharedPreferences.getString(SPREGNO, "-1");
-//            password = sharedPreferences.getString(SPPWD, "-1");
-//            userMode = sharedPreferences.getInt(SPUSERMODE, -1);
             showForm(false);
             launchApp();
         }else{
@@ -92,10 +103,32 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void launchApp() {
-
+        Crouton.makeText(this, "Welcome to ACM Internal", Style.ALERT).show();
     }
 
+    /*
+     * Posts data to the server for authentication after converting data into appropriate JSONObject format.
+     */
     private void authenticateCredentials() {
+
+        // Creating a new ToPost object and filling in the values.
+        ToPost toPost = new ToPost();
+        toPost.regno = registrationNumber;
+        toPost.pass = password;
+
+        Gson gson = new Gson();
+        JSONObject jsonObject = null;
+
+        try{
+            jsonObject = new JSONObject(gson.toJson(toPost,ToPost.class));
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }finally {
+            if(jsonObject != null){
+                myVolley.insertRequest(this, URL, jsonObject);
+            }
+        }
+
 
     }
 
@@ -116,9 +149,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      * Checks if the fields of the form has valid data entered in it. If so, it'll begin the authentication process.
      */
     private void validateForm() {
-        if(etRegno.getText().toString().trim().isEmpty()){
+        registrationNumber = etRegno.getText().toString().trim().toUpperCase();
+        password = etPassword.getText().toString().trim();
+
+        if(registrationNumber.isEmpty()){
             etRegno.setError("Please enter a valid registration number");
-        }else if (etPassword.getText().toString().trim().isEmpty()){
+        }else if (password.isEmpty()){
             etPassword.setError("Please enter the password");
         }else{
             showForm(false);
@@ -130,8 +166,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     /*
      * Launches a context sensitive toast (Crouton) on the top of the screen with the error message.
      */
-    private void launchNoNetworkError() {
-        Crouton.makeText(this, "No Internet Connection", Style.ALERT).show();
+    private void launchNetworkError() {
+        Crouton.makeText(this, "Network error occured. Try again.", Style.ALERT).show();
+    }
+
+    /*
+     * Launches a context sensitive toast on the top of the screen with invalid credentials error message.
+     */
+    private void launchInvalidCredentialsError(){
+        Crouton.makeText(this, "Invalid credentials. Please try again.", Style.ALERT).show();
     }
 
     /*
@@ -158,4 +201,60 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Crouton.cancelAllCroutons();
     }
 
+    /*
+     * Called when the request given to volley fails due to some error.
+     */
+    @Override
+    public void onFail(VolleyError error) {
+        launchNetworkError();
+        showForm(true);
+    }
+
+    /*
+     * Called after volley successfully completes the given request.
+     */
+    @Override
+    public void onSuccess(JSONObject response) {
+        Gson gson = new Gson();
+        ToReceive toReceive = gson.fromJson(response.toString(), ToReceive.class);
+        userMode = toReceive.priority;
+        if(userMode != -1){
+            updateSharedPrefs(toReceive);
+            launchApp();
+        }else{
+            launchInvalidCredentialsError();
+            showForm(true);
+        }
+    }
+
+    /*
+     * Updates the shared preferences with the latest data fetched from the server.
+     */
+    private void updateSharedPrefs(ToReceive toReceive) {
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putString(SPREGNO, registrationNumber);
+        editor.putString(SPPWD, password);
+        editor.putInt(SPUSERMODE, userMode);
+        editor.putString(SPIMGURL, toReceive.url);
+        editor.putString(SPNAME, toReceive.name);
+        editor.putBoolean(SPLOGGEDIN, true);
+        editor.commit();
+
+    }
+
+    /*
+     * The class ToPost used as a blueprint to convert java object to JSONString before sending a post request.
+     * In a similar way, ToReceive is a blueprint for converting JSONString to java object after receiving a
+     * reply from the server.
+     */
+    private class ToPost{
+        public String regno;
+        public String pass;
+    }
+
+    private class ToReceive{
+        public String name;
+        public int priority;
+        public String url;
+    }
 }
