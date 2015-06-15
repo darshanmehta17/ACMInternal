@@ -10,6 +10,7 @@
 
     <color name="text_primary">#D9FFFFFF</color>
     <color name="text_secondary">#D9000000</color>
+    <color name="text_gray">#a0b2b2b2</color>
 
 
 </resources>

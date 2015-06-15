@@ -19,7 +19,7 @@ public class MyVolley {
 
     public void insertRequest(Context context,String URL,JSONObject jsonObject){
 
-        jsonRequest= new JsonObjectRequest(Request.Method.GET, URL, jsonObject, new Response.Listener<JSONObject>() {
+        jsonRequest= new JsonObjectRequest(Request.Method.POST, URL, jsonObject, new Response.Listener<JSONObject>() {
 
             @Override
             public void onResponse(JSONObject response) {

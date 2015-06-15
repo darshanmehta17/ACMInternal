@@ -1,17 +1,25 @@
 package studios.slick.acminternal;
 
+import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethod;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 
 import com.android.volley.VolleyError;
 import com.gc.materialdesign.views.ProgressBarIndeterminate;
@@ -25,6 +33,7 @@ import de.keyboardsurfer.android.widget.crouton.Crouton;
 import de.keyboardsurfer.android.widget.crouton.Style;
 import studios.slick.acminternal.customviews.MyButton;
 import studios.slick.acminternal.customviews.MyTextView;
+import studios.slick.acminternal.networkmanagement.NetworkManager;
 import studios.slick.acminternal.volleyhandler.MyVolley;
 
 
@@ -74,6 +83,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         etRegno = (MaterialEditText)findViewById(R.id.etRegNo);
         etPassword = (MaterialEditText)findViewById(R.id.etPassword);
+        etPassword.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                if(actionId == EditorInfo.IME_ACTION_GO){
+                    InputMethodManager inputMethodManager = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                    inputMethodManager.hideSoftInputFromWindow(etPassword.getWindowToken(), 0);
+                    validateForm();
+                    return true;
+                }
+                return false;
+            }
+        });
         loginLayout = (LinearLayout)findViewById(R.id.llLoginDetails);
         progressBar = (ProgressBarIndeterminate)findViewById(R.id.progressBarLogin);
         loginSupportTextView = (MyTextView) findViewById(R.id.loginSupportText);
@@ -87,7 +108,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         checkLogin();
     }
 
-    /*
+    /**
      * Checks if the user has already logged in. If so, it'll launch the app, else
      * it makes the login form visible.
      */
@@ -103,10 +124,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void launchApp() {
-        Crouton.makeText(this, "Welcome to ACM Internal", Style.ALERT).show();
+        Intent intent = new Intent(this, HomeActivity.class);
+        startActivity(intent);
+        finish();
     }
 
-    /*
+    /**
      * Posts data to the server for authentication after converting data into appropriate JSONObject format.
      */
     private void authenticateCredentials() {
@@ -128,8 +151,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 myVolley.insertRequest(this, URL, jsonObject);
             }
         }
-
-
     }
 
 
@@ -145,7 +166,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    /*
+    /**
      * Checks if the fields of the form has valid data entered in it. If so, it'll begin the authentication process.
      */
     private void validateForm() {
@@ -154,30 +175,40 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         if(registrationNumber.isEmpty()){
             etRegno.setError("Please enter a valid registration number");
-        }else if (password.isEmpty()){
+            etPassword.clearFocus();
+            etRegno.requestFocus();
+        } else if (password.isEmpty()){
             etPassword.setError("Please enter the password");
-        }else{
-            showForm(false);
-            authenticateCredentials();
+            etRegno.clearFocus();
+            etPassword.requestFocus();
+        } else{
+
+            if(NetworkManager.isNetworkConnected(this)){
+                showForm(false);
+                authenticateCredentials();
+            } else{
+                launchNetworkError();
+            }
+
         }
     }
 
 
-    /*
+    /**
      * Launches a context sensitive toast (Crouton) on the top of the screen with the error message.
      */
     private void launchNetworkError() {
         Crouton.makeText(this, "Network error occured. Try again.", Style.ALERT).show();
     }
 
-    /*
+    /**
      * Launches a context sensitive toast on the top of the screen with invalid credentials error message.
      */
     private void launchInvalidCredentialsError(){
         Crouton.makeText(this, "Invalid credentials. Please try again.", Style.ALERT).show();
     }
 
-    /*
+    /**
      * Toggles the visibility of the login form
      */
     private void showForm(boolean isVisible){
@@ -201,16 +232,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Crouton.cancelAllCroutons();
     }
 
-    /*
+    /**
      * Called when the request given to volley fails due to some error.
      */
     @Override
     public void onFail(VolleyError error) {
+        Log.i("MAINACTIVITY","VolleyError: " + error.toString());
         launchNetworkError();
         showForm(true);
     }
 
-    /*
+    /**
      * Called after volley successfully completes the given request.
      */
     @Override
@@ -218,7 +250,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Gson gson = new Gson();
         ToReceive toReceive = gson.fromJson(response.toString(), ToReceive.class);
         userMode = toReceive.priority;
-        if(userMode != -1){
+        if(userMode > -1){
             updateSharedPrefs(toReceive);
             launchApp();
         }else{
@@ -227,7 +259,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    /*
+    /**
      * Updates the shared preferences with the latest data fetched from the server.
      */
     private void updateSharedPrefs(ToReceive toReceive) {
@@ -238,11 +270,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         editor.putString(SPIMGURL, toReceive.url);
         editor.putString(SPNAME, toReceive.name);
         editor.putBoolean(SPLOGGEDIN, true);
-        editor.commit();
+        editor.apply();
 
     }
 
-    /*
+    /**
      * The class ToPost used as a blueprint to convert java object to JSONString before sending a post request.
      * In a similar way, ToReceive is a blueprint for converting JSONString to java object after receiving a
      * reply from the server.
