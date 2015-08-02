@@ -3,17 +3,15 @@ package studios.slick.acminternal;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.support.design.widget.Snackbar;
+import android.support.design.widget.TextInputLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.KeyEvent;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
-import android.view.inputmethod.InputMethod;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
@@ -22,7 +20,6 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.android.volley.VolleyError;
-import com.gc.materialdesign.views.ProgressBarIndeterminate;
 import com.google.gson.Gson;
 import com.rengwuxian.materialedittext.MaterialEditText;
 
@@ -31,23 +28,23 @@ import org.json.JSONObject;
 
 import de.keyboardsurfer.android.widget.crouton.Crouton;
 import de.keyboardsurfer.android.widget.crouton.Style;
-import studios.slick.acminternal.customviews.MyButton;
 import studios.slick.acminternal.customviews.MyTextView;
-import studios.slick.acminternal.networkmanagement.NetworkManager;
-import studios.slick.acminternal.volleyhandler.MyVolley;
+import studios.slick.acminternal.utils.NetworkUtils;
+import studios.slick.acminternal.utils.MyVolley;
 
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener, MyVolley.OnFailureListener, MyVolley.OnSuccessListener {
 
     SharedPreferences sharedPreferences;
     Button loginButton, exitButton;
-    MaterialEditText etRegno, etPassword;
-    ProgressBarIndeterminate progressBar;
+    EditText etRegNo, etPassword;
+    TextInputLayout etRegNoHolder, etPasswordHolder;
+    ProgressBar progressBar;
+
     LinearLayout loginLayout;
     MyTextView loginSupportTextView;
     Toolbar toolbar;
 
-    private boolean hasLoggedIn;
     private String registrationNumber;
     private String password;
     private int userMode;
@@ -81,8 +78,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         myVolley.setOnSuccessListener(this);
         myVolley.setOnFailureListener(this);
 
-        etRegno = (MaterialEditText)findViewById(R.id.etRegNo);
-        etPassword = (MaterialEditText)findViewById(R.id.etPassword);
+        etRegNo = (EditText) findViewById(R.id.etRegNo);
+        etRegNoHolder = (TextInputLayout) findViewById(R.id.etRegNoHolder);
+        etPassword = (EditText) findViewById(R.id.etPassword);
+        etPasswordHolder = (TextInputLayout) findViewById(R.id.etPasswordHolder);
         etPassword.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
@@ -96,7 +95,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         });
         loginLayout = (LinearLayout)findViewById(R.id.llLoginDetails);
-        progressBar = (ProgressBarIndeterminate)findViewById(R.id.progressBarLogin);
+        progressBar = (ProgressBar)findViewById(R.id.progressBarLogin);
         loginSupportTextView = (MyTextView) findViewById(R.id.loginSupportText);
 
         toolbar = (Toolbar) findViewById(R.id.toolbarLogin);
@@ -113,7 +112,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      * it makes the login form visible.
      */
     private void checkLogin() {
-        hasLoggedIn = sharedPreferences.getBoolean(SPLOGGEDIN, false);
+        boolean hasLoggedIn = sharedPreferences.getBoolean(SPLOGGEDIN, false);
         if(hasLoggedIn){
             showForm(false);
             launchApp();
@@ -170,20 +169,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      * Checks if the fields of the form has valid data entered in it. If so, it'll begin the authentication process.
      */
     private void validateForm() {
-        registrationNumber = etRegno.getText().toString().trim().toUpperCase();
+        registrationNumber = etRegNo.getText().toString().trim().toUpperCase();
         password = etPassword.getText().toString().trim();
 
         if(registrationNumber.isEmpty()){
-            etRegno.setError("Please enter a valid registration number");
+            etRegNoHolder.setError("Please enter a valid registration number");
             etPassword.clearFocus();
-            etRegno.requestFocus();
+            etRegNo.requestFocus();
         } else if (password.isEmpty()){
-            etPassword.setError("Please enter the password");
-            etRegno.clearFocus();
+            etPasswordHolder.setError("Please enter the password");
+            etRegNo.clearFocus();
             etPassword.requestFocus();
         } else{
 
-            if(NetworkManager.isNetworkConnected(this)){
+            if(NetworkUtils.isNetworkConnected(this)){
                 showForm(false);
                 authenticateCredentials();
             } else{
@@ -199,6 +198,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      */
     private void launchNetworkError() {
         Crouton.makeText(this, "Network error occured. Try again.", Style.ALERT).show();
+//        Snackbar
+//                .make(getWindow().findViewById(0).getRootView(), "Network Error", Snackbar.LENGTH_LONG)
+//                .show();
     }
 
     /**

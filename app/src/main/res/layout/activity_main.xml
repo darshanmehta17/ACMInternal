@@ -59,18 +59,21 @@
             android:layout_height="5dp"
             android:background="@drawable/toolbar_dropshadow" />
 
-        <com.gc.materialdesign.views.ProgressBarIndeterminate
+        <ProgressBar
             android:id="@+id/progressBarLogin"
+            style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+            android:layout_marginTop="-7dp"
             android:layout_width="match_parent"
-            android:layout_height="3dp"
-            android:background="@color/colorAccent" />
+            android:layout_height="wrap_content"
+            android:indeterminate="true" />
+
     </RelativeLayout>
 
 
     <LinearLayout
         android:id="@+id/llLoginDetails"
         android:layout_width="match_parent"
-        android:visibility="visible"
+        android:visibility="gone"
         android:orientation="vertical"
         android:gravity="center"
         android:layout_below="@id/shadowProgressLayout"
@@ -81,36 +84,74 @@
         android:layout_height="wrap_content">
 
 
-        <com.rengwuxian.materialedittext.MaterialEditText
-            android:id="@+id/etRegNo"
-            android:layout_width="match_parent"
+        <android.support.design.widget.TextInputLayout
+            android:id="@+id/etRegNoHolder"
             android:layout_height="wrap_content"
-            app:met_primaryColor="@color/colorAccent"
-            app:met_baseColor="@color/text_secondary"
-            app:met_floatingLabel="highlight"
-            android:hint="Registration Number"
-            android:singleLine="true"
-            android:inputType="textCapCharacters"
-            app:met_textColor="@color/text_secondary"
-            app:met_accentTypeface="Roboto-Light.ttf"
-            app:met_typeface="Roboto-Light.ttf"
-            />
+            android:layout_width="match_parent"
+            >
 
-        <com.rengwuxian.materialedittext.MaterialEditText
-            android:id="@+id/etPassword"
-            android:layout_width="match_parent"
+            <studios.slick.acminternal.customviews.MyEditText
+                android:id="@+id/etRegNo"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Registration Number"
+                foo:etFont="Roboto-Light.ttf"
+                android:singleLine="true"
+                android:inputType="textCapCharacters"
+                />
+
+        </android.support.design.widget.TextInputLayout>
+
+        <android.support.design.widget.TextInputLayout
+            android:id="@+id/etPasswordHolder"
             android:layout_height="wrap_content"
-            app:met_primaryColor="@color/colorAccent"
-            app:met_baseColor="@color/text_secondary"
-            app:met_floatingLabel="highlight"
-            android:hint="Password"
-            android:singleLine="true"
-            android:inputType="textPassword"
-            android:imeOptions="actionGo"
-            app:met_textColor="@color/text_secondary"
-            app:met_accentTypeface="Roboto-Light.ttf"
-            app:met_typeface="Roboto-Light.ttf"
-            />
+            android:layout_width="match_parent"
+            >
+
+            <studios.slick.acminternal.customviews.MyEditText
+                android:id="@+id/etPassword"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                foo:etFont="Roboto-Light.ttf"
+                android:hint="Password"
+                android:singleLine="true"
+                android:inputType="textPassword"
+                android:imeOptions="actionGo"
+
+                />
+
+        </android.support.design.widget.TextInputLayout>
+
+        <!--<com.rengwuxian.materialedittext.MaterialEditText-->
+            <!--android:id="@+id/etRegNo"-->
+            <!--android:layout_width="match_parent"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--app:met_primaryColor="@color/colorAccent"-->
+            <!--app:met_baseColor="@color/text_secondary"-->
+            <!--app:met_floatingLabel="highlight"-->
+            <!--android:hint="Registration Number"-->
+            <!--android:singleLine="true"-->
+            <!--android:inputType="textCapCharacters"-->
+            <!--app:met_textColor="@color/text_secondary"-->
+            <!--app:met_accentTypeface="Roboto-Light.ttf"-->
+            <!--app:met_typeface="Roboto-Light.ttf"-->
+            <!--/>-->
+
+        <!--<com.rengwuxian.materialedittext.MaterialEditText-->
+            <!--android:id="@+id/etPassword"-->
+            <!--android:layout_width="match_parent"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--app:met_primaryColor="@color/colorAccent"-->
+            <!--app:met_baseColor="@color/text_secondary"-->
+            <!--app:met_floatingLabel="highlight"-->
+            <!--android:hint="Password"-->
+            <!--android:singleLine="true"-->
+            <!--android:inputType="textPassword"-->
+            <!--android:imeOptions="actionGo"-->
+            <!--app:met_textColor="@color/text_secondary"-->
+            <!--app:met_accentTypeface="Roboto-Light.ttf"-->
+            <!--app:met_typeface="Roboto-Light.ttf"-->
+            <!--/>-->
     </LinearLayout>
 
     <RelativeLayout
@@ -143,6 +184,7 @@
             android:layout_alignParentStart="true"
             android:layout_alignParentLeft="true"
             android:text="〈"
+            android:textStyle="bold"
             android:textSize="16sp"
             android:padding="12dp"
             android:layout_marginStart="14dp"

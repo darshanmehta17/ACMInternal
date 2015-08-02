@@ -1,19 +1,7 @@
 package studios.slick.acminternal;
 
-import android.os.Handler;
-import android.support.v4.widget.SwipeRefreshLayout;
-import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.widget.Adapter;
-import android.widget.ArrayAdapter;
-import android.widget.ListView;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
 
 
 public class HomeActivity extends AppCompatActivity {
@@ -24,7 +12,6 @@ public class HomeActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
     }
-
 
 //    @Override
 //    public boolean onCreateOptionsMenu(Menu menu) {

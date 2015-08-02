@@ -1,4 +1,4 @@
-package studios.slick.acminternal.volleyhandler;
+package studios.slick.acminternal.utils;
 
 import android.content.Context;
 
